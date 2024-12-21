@@ -15,7 +15,8 @@ BASE_URL = "http://api.openweathermap.org/data/2.5/forecast"
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-def fetch_weather_data(city="London", units="metric", lang="en", cnt=None):
+
+def fetch_weather_data(city="London", units="metric", lang="en", cnt=None, output_file="raw_weather_data.json"):
     """
     Fetch weather data from the OpenWeatherMap API and save it to a file.
 
@@ -24,15 +25,19 @@ def fetch_weather_data(city="London", units="metric", lang="en", cnt=None):
         units (str): Units of measurement ("metric", "imperial", or "standard"). Default is "metric".
         lang (str): Language for weather descriptions (e.g., "en" for English). Default is "en".
         cnt (int): Number of timestamps to fetch. Optional.
+        output_file (str): File path to save the API response. Default is 'raw_weather_data.json'.
+
+    Returns:
+        dict: The raw JSON response from the API.
 
     Raises:
         ValueError: If the API key is missing or an HTTP error occurs.
 
     Saves:
-        A file named "raw_weather_data.json" containing the API response.
+        The API response in a JSON file.
     """
     if not API_KEY:
-        logging.error("API key not found.")
+        logging.error("API key not found. Ensure it is set in the .env file.")
         raise ValueError("API key not found. Please set it in the .env file.")
     
     params = {
@@ -42,23 +47,34 @@ def fetch_weather_data(city="London", units="metric", lang="en", cnt=None):
         "lang": lang,
     }
     
-    # Add optional parameters
     if cnt:
         params["cnt"] = cnt
 
     try:
+        logging.info(f"Fetching weather data for city: {city} with parameters: {params}")
         response = requests.get(BASE_URL, params=params)
         response.raise_for_status()  # Raise an exception for HTTP errors
+
         data = response.json()
-        with open("raw_weather_data.json", "w") as f:
+        logging.info(f"Received response: {len(data.get('list', []))} records fetched.")
+
+        # Save the data to a file
+        with open(output_file, "w") as f:
             json.dump(data, f, indent=4)
-        logging.info("Weather data fetched and saved to raw_weather_data.json")
+        logging.info(f"Weather data successfully saved to {output_file}")
+
+        return data
+
     except requests.exceptions.HTTPError as http_err:
         logging.error(f"HTTP error occurred: {http_err}")
-        print(f"Failed to fetch data: {response.status_code} - {response.text}")
-    except Exception as err:
-        logging.error(f"An error occurred: {err}")
         raise
+    except requests.exceptions.RequestException as req_err:
+        logging.error(f"Request error occurred: {req_err}")
+        raise
+    except Exception as err:
+        logging.error(f"An unexpected error occurred: {err}")
+        raise
+
 
 if __name__ == "__main__":
     # Example invocation
