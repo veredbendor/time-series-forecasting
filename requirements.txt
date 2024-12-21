@@ -1,4 +1,7 @@
 apache-airflow
 pandas
+pytest
+pytest-mock
+python-dotenv
 requests
 streamlit
