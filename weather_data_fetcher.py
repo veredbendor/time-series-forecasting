@@ -78,4 +78,4 @@ def fetch_weather_data(city="London", units="metric", lang="en", cnt=None, outpu
 
 if __name__ == "__main__":
     # Example invocation
-    fetch_weather_data(city="New York", units="metric", lang="en", cnt=5)
+    fetch_weather_data(city="New York", units="metric", lang="en", cnt=50)

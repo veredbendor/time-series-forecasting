@@ -1,6 +1,7 @@
 import json
 import pandas as pd
 import logging
+from database_connector import insert_weather_data  # Ensure this exists
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -39,4 +40,32 @@ def transform_weather_data(raw_file="raw_weather_data.json"):
 
     except Exception as e:
         logging.error(f"Error transforming data: {e}")
+        raise
+
+def transform_and_store_weather_data(raw_file="raw_weather_data.json", city="Unknown"):
+    """
+    Transforms raw weather data and stores it in the database.
+
+    Parameters:
+        raw_file (str): Path to the raw JSON file. Default is 'raw_weather_data.json'.
+        city (str): City name associated with the weather data.
+    """
+    try:
+        # Transform data
+        df = transform_weather_data(raw_file)
+
+        # Add the city column to the DataFrame
+        df["city"] = city
+
+        # Convert the timestamp column to ISO 8601 string format
+        df["timestamp"] = df["timestamp"].dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        # Convert DataFrame to a list of dictionaries
+        records = df.to_dict(orient="records")
+
+        # Insert data into the database
+        insert_weather_data(records)
+        logging.info(f"Weather data for {city} successfully transformed and stored in the database.")
+    except Exception as e:
+        logging.error(f"Error transforming and storing data: {e}")
         raise
